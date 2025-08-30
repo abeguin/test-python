@@ -1,0 +1,54 @@
+[project]
+name = "sfy-python-template"
+version = "0.8.1"
+description = "pyproject template for your best python projects"
+readme = "README.md"
+authors = []
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic-yaml>=1.4.0",
+    "pydantic>=2.11.7",
+    "pyyaml>=6.0.2",
+    "typer>=0.16.0",
+    "emoji>=2.14.1"
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "basedpyright>=1.29.1",
+    "pytest-cov>=6.1.1",
+    "pytest-datadir>=1.6.1",
+    "pytest-json-ctrf>=0.3.5",
+    "pytest-integration>=0.2.3",
+    "pytest>=8.3.5",
+    "pytestarch>=4.0.0",
+    "ruff>=0.11.9",
+]
+
+[project.scripts]
+sfy-python-template = "sfy_python_template.__main__:main"
+
+# uncomment to publish to artifactory
+#[[tool.uv.index]]
+#name = "artifactory"
+#url = "https://pictet.jfrog.io/artifactory/pypi-public/simple"
+#publish-url = "https://pictet.jfrog.io/artifactory/api/pypi/pypi-local-public/"
+#authenticate = "always"
+#explicit = true
+
+[tool.ruff.lint]
+extend-select = ["I"]
+
+[tool.basedpyright]
+failOnWarnings = false
+pythonVersion = "3.13"
+venv = ".venv"
+
+[tool.pytest.ini_options]
+addopts = [
+    "--import-mode=importlib",
+]

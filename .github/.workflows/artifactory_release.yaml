@@ -1,0 +1,54 @@
+name: Publish wheel to artifactory
+
+on: workflow_dispatch
+
+permissions:
+  id-token: write
+  contents: write
+
+jobs:
+  release:
+    name: build and release
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: artifactory login
+        uses: jfrog/setup-jfrog-cli@v4
+        id: jfrog-login
+        env:
+          JF_URL: "https://pictet.jfrog.io/"
+        with:
+          oidc-provider-name: github
+          oidc-audience: jfrog-github
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ssh-key: ${{ secrets.DEPLOY_KEY_PRIV }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: '.python-version'
+
+      - uses: astral-sh/setup-uv@v5
+
+      - uses: cocogitto/cocogitto-action@v3
+        name: release
+        id: release
+        with:
+          release: true
+        env:
+          UV_PUBLISH_USERNAME: ${{ steps.jfrog-login.outputs.oidc-user }}
+          UV_PUBLISH_PASSWORD: ${{ steps.jfrog-login.outputs.oidc-token }}
+
+      - name: github changelog
+        run: >
+          cog changelog
+          --at ${{ steps.release.outputs.version }}
+          --template full_hash > ${{ github.workspace }}-CHANGELOG.md
+
+      - name: github release
+        uses: softprops/action-gh-release@v1
+        with:
+          body_path: ${{ github.workspace }}-CHANGELOG.md
+          tag_name: ${{ steps.release.outputs.version }}

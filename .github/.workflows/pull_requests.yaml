@@ -1,0 +1,111 @@
+# Run the tests for validation workflow
+# Runs the test for pytest in the folder validation/code
+
+name: Run Validation Tests
+on: [ pull_request ]
+
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+
+jobs:
+  format-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: '.python-version'
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: install devtools
+        run: uv sync
+
+      - name: Check formatting
+        run: uv run ruff format --check
+
+  linter-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: '.python-version'
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: install devtools
+        run: uv sync
+
+      - name: Run linter
+        run: uv run ruff check
+
+  type-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: '.python-version'
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: install devtools
+        run: uv sync
+
+      - name: Run type checker
+        run: uv run basedpyright
+
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: '.python-version'
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: install devtools
+        run: uv sync
+
+      - name: Run tests
+        run: uv run pytest --ctrf test-report.json
+
+      - name: Publish Test Report
+        uses: ctrf-io/github-test-reporter@v1
+        with:
+          report-path: test-report.json
+          pull-request-report: true
+          pull-request: true
+          overwrite-comment: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        if: success() || failure()
+
+  commit-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - uses: cocogitto/cocogitto-action@v3
+        with:
+          check-latest-tag-only: true
+  
